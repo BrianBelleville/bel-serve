@@ -1,4 +1,4 @@
 bel-serve
 =========
 
-A basic http server that built on top of bel-http
+A basic http server that is built on top of bel-http.
