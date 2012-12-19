@@ -5,7 +5,7 @@
    '((:txt "text/plain")
      (:html "text/html")
      (:css "text/css")
-     (:jpeg "image/jpeg")
+     (:jpg "image/jpg")
      (:gif "image/gif")
      (:pdf "application/pdf"))))
 
