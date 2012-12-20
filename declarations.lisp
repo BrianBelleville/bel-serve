@@ -28,4 +28,8 @@
 (defvar *root-dir*) ; the root directory of the page
 (defvar *root-file-path*) ; the file that should be served for requests to the root directory
 
-(defvar *listen-socket*)
+(defparameter *number-of-threads* 4)
+
+(defvar *connection-queue* (make-instance 'queue))
+(defvar *con-count-sem* (make-semaphore))
+(defvar *con-queue-mutex* (make-mutex))

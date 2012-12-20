@@ -26,9 +26,9 @@
     (setf (http-response-body response) (open pathname :element-type '(unsigned-byte 8) )) 
     (send-response stream response)))
 
-(defun service-request ()
-  (multiple-value-bind (request stream) (receive-request *listen-socket*)
-    (declare (type stream stream))
+(defun service-request (remote-socket)
+  (multiple-value-bind (request stream) (receive-request remote-socket)
+    (declare (type stream stream)) ; request may be null if there is an error with what was read from the stream
     (handler-case
 	(if request
 	    ;right now only suport GET requests, in the future maybe split out this cond clause to handle the variety of request types.
@@ -42,16 +42,36 @@
       (error () (send-response stream *error-response*)))
     (close stream)))
 
+(defun accept-connections-loop (listen-socket)
+  (declare (type inet-socket listen-socket))
+  (unwind-protect
+       (loop
+	    (let ((remote-socket (socket-accept listen-socket)))
+	      (with-mutex (*con-queue-mutex*)
+		(enqueue *connection-queue* remote-socket))
+	      (signal-semaphore *con-count-sem*)))
+    (socket-close listen-socket)))
+
+(defun service-connections-loop ()
+  (loop
+     (wait-on-semaphore *con-count-sem*)
+     (let ((remote-socket (with-mutex (*con-queue-mutex*)
+			    (dequeue *connection-queue*))))
+       (service-request remote-socket))))
+     
 (export 'start-server)
 (defun start-server (&optional (port 8080) (root-dir *root-dir*) (root-file-path *root-file-path*))
   "starts an http server listening at port. It will serve files from root-dir, and requests for root will be answered with the file at root-file-path"
-  (let ((*listen-socket* (make-instance 'inet-socket :type :stream :protocol :tcp))
-	(*root-dir* root-dir)
-	(*root-file-path* root-file-path))
-    (unwind-protect
-	 (progn
-	   (socket-bind *listen-socket* '(0 0 0 0) port)
-	   (socket-listen *listen-socket* 256)
-	   (loop
-	      (service-request)))
-      (when *listen-socket* (socket-close *listen-socket*)))))
+  (setf *root-dir* root-dir
+	*root-file-path* root-file-path)
+  (let ((listen-socket (make-instance 'inet-socket :type :stream :protocol :tcp)))
+    (progn
+      (socket-bind listen-socket '(0 0 0 0) port)
+      (socket-listen listen-socket 256)
+      (make-thread (lambda () (accept-connections-loop listen-socket))
+		   :name "Accept Connections Thread")
+      (loop
+	 for i from 1 to *number-of-threads* do
+	   (make-thread #'service-connections-loop
+			:name (format nil "Service Connections Thread ~D" i)))))
+  t) ;return t
