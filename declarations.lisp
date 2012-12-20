@@ -6,6 +6,7 @@
      (:html "text/html")
      (:css "text/css")
      (:jpg "image/jpg")
+     (:jpeg "image/jpeg")
      (:gif "image/gif")
      (:pdf "application/pdf"))))
 
