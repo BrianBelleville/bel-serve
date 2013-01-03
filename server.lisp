@@ -19,12 +19,33 @@
 	  (setf (gethash :content-type headers) val)
 	  (error "unsupported content type")))))
 
+;; todo : send-resource and send-string should probably be the same generic function with dispatch on type, so that the sending of dynamically generated content and static content uses the same function. This could also allow for handlers to return different types of data than a string
 (defun send-resource (stream  pathname)
   (declare (type stream stream))
   (let ((response (make-ok-response)))
     (set-content-type response pathname)
     (setf (http-response-body response) (open pathname :element-type '(unsigned-byte 8) )) 
     (send-response stream response)))
+
+(defun send-string (stream string)
+  (declare (type stream stream)
+	   (type string string))
+  (let ((response (make-ok-response)))
+    (setf (gethash :content-type
+		   (http-response-header-fields response))
+	  "text/html")
+    (setf (http-response-body response) string)
+    (send-response stream response)))
+
+(defun service-get (request stream)
+  (declare (type http-request request)
+	   (type stream stream))
+  (multiple-value-bind (gen-html found) (execute-get-method (http-request-request-uri request))
+    (if found
+	(send-string stream gen-html)
+	(aif (find-resource request)
+			(send-resource stream it)
+			(send-response stream *not-found-response*)))))
 
 (defun service-request (remote-socket)
   (multiple-value-bind (request stream) (receive-request remote-socket)
@@ -33,9 +54,7 @@
 	(if request
 	    ;right now only suport GET requests, in the future maybe split out this cond clause to handle the variety of request types.
 	    (cond ((equal (http-request-method request) "GET")
-		   (aif (find-resource request)
-			(send-resource stream it)
-			(send-response stream *not-found-response*)))
+		   (service-get request stream))
 		  (t (send-response stream *forbidden-response*)))
 	    (send-response stream *bad-request-response*))
       (socket-error () ) ; socket error, do nothing, socket will be closed after the form is exited

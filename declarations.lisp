@@ -1,5 +1,7 @@
 (in-package :bel-serve)
 
+(defparameter *server-rev* "bel-serve/0.0.2")
+
 (defvar *mime-types*
   (assoc-list-to-hash-table
    '((:txt "text/plain")

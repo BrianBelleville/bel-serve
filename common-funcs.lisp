@@ -2,7 +2,7 @@
 
 (defun make-base-header-fields ()
   (let ((ret (make-hash-table)))
-    (setf (gethash :server ret) "bel-http/0.0.1")
+    (setf (gethash :server ret) *server-rev*)
     ret))
 
 (defun make-base-response ()

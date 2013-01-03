@@ -1,7 +1,7 @@
 (asdf:defsystem "bel-serve"
   :description "A basic http server built on top of bel-http"
   :author "Brian Belleville"
-  :depends-on (:bel-utils :bel-http)
+  :depends-on (:bel-utils :bel-http :first-gen)
   :serial t
   :components ((:file "package")
 	       (:file "declarations")

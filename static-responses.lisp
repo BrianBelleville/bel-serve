@@ -1,22 +1,22 @@
 (in-package :bel-serve)
 
-(defvar *error-response*
+(defparameter *error-response*
   (create-response *error*
-		   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">
+		   "<!DOCTYPE html>
 <html>
 <head>
 <title>500 Internal Server Error</title>
 </head>
 <body>
-<h1>Not Found</h1>
+<h1>Internal Server Error</h1>
 <p>The server has encountered an internal error</p>
 <hr>
 </body>
 </html>"))
 
-(defvar *not-found-response*
+(defparameter *not-found-response*
   (create-response *not-found*
-		   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">
+		   "<!DOCTYPE html>
 <html>
 <head>
 <title>404 Not Found</title>
@@ -28,9 +28,9 @@
 </body>
 </html>"))
 
-(defvar *bad-request-response*
+(defparameter *bad-request-response*
   (create-response *bad-request*
-		   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">
+		   "<!DOCTYPE html>
 <html>
 <head>
 <title>400 Bad Request</title>
@@ -42,9 +42,9 @@
 </body>
 </html>"))
 
-(defvar *forbidden-response*
+(defparameter *forbidden-response*
   (create-response *forbidden*
-		   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">
+		   "<!DOCTYPE html>
 <html>
 <head>
 <title>403 Forbidden</title>
