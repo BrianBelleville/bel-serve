@@ -27,7 +27,6 @@
 (defparameter *ok* 200)
 (defparameter *error* 500)
 
-(export '(*root-dir* *root-file-path*))
 (defvar *root-dir*) ; the root directory of the page
 (defvar *root-file-path*) ; the file that should be served for requests to the root directory
 

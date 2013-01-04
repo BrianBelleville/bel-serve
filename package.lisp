@@ -6,4 +6,7 @@
 	:sb-thread
 	:bel-http
 	:bel-utils
-	:first-gen-server-hooks))
+	:first-gen-server-hooks)
+  (:export :start-server
+	   :*root-dir*
+	   :*root-file-path*))
