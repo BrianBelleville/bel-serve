@@ -40,12 +40,17 @@
 (defun service-get (request stream)
   (declare (type http-request request)
 	   (type stream stream))
-  (multiple-value-bind (gen-html found) (execute-get-method (http-request-request-uri request))
-    (if found
-	(send-string stream gen-html)
-	(aif (find-resource request)
+  (with-slots (request-uri header-fields) request
+    (declare (type string request-uri)
+	     (type hash-table header-fields))
+    (multiple-value-bind (uri-base query-string) (break-string #\? request-uri)
+      (declare (type string uri-base query-string))
+      (multiple-value-bind (gen-html found) (execute-get-method uri-base query-string header-fields)
+	(if found
+	    (send-string stream gen-html)
+	    (aif (find-resource request)
 			(send-resource stream it)
-			(send-response stream *not-found-response*)))))
+			(send-response stream *not-found-response*)))))))
 
 (defun service-request (remote-socket)
   (multiple-value-bind (request stream) (receive-request remote-socket)
@@ -73,11 +78,19 @@
 
 (defun service-connections-loop ()
   (loop
-     (wait-on-semaphore *con-count-sem*)
-     (let ((remote-socket (with-mutex (*con-queue-mutex*)
-			    (dequeue *connection-queue*))))
-       (service-request remote-socket))))
-     
+     (handler-case
+	 (progn
+	   (wait-on-semaphore *con-count-sem*)
+	   (let ((remote-socket (with-mutex (*con-queue-mutex*)
+				  (dequeue *connection-queue*))))
+	     (service-request remote-socket)))
+       (error () )))) ; do nothing for now, prevents an unhandled error from stopping the loop by entering the debugger. todo: put in some sort of logging
+
+(defun spawn-service-thread (name)
+  (declare (type string name))
+  (make-thread #'service-connections-loop
+			:name name))
+       
 (defun start-server (&optional (port 8080) (root-dir *root-dir*) (root-file-path *root-file-path*))
   "starts an http server listening at port. It will serve files from root-dir, and requests for root will be answered with the file at root-file-path"
   (setf *root-dir* root-dir
@@ -90,6 +103,5 @@
 		   :name "Accept Connections Thread")
       (loop
 	 for i from 1 to *number-of-threads* do
-	   (make-thread #'service-connections-loop
-			:name (format nil "Service Connections Thread ~D" i)))))
+	  (spawn-service-thread (format nil "Service Connections Thread ~D" i)))))
   t) ;return t
