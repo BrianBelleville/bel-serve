@@ -107,7 +107,7 @@
                :name name))
 
 (defun start-server
-    (&optional (port 8080) (root-dir *root-dir*) (root-file-path *root-file-path*))
+    (&key (port 8080) root-dir root-file-path)
   "starts an http server listening at port. It will serve files from
 root-dir, and requests for root will be answered with the file at
 root-file-path"

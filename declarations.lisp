@@ -27,6 +27,7 @@
 (defparameter *ok* 200)
 (defparameter *error* 500)
 
+;; these are set by bel-serve:start-server
 (defvar *root-dir*) ; the root directory of the page
 (defvar *root-file-path*) ; the file that should be served for requests to the root directory
 
